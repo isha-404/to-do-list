@@ -43,8 +43,8 @@
 
   /* ---------- scale note / strip ---------- */
   .scale{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:9px 0;border-bottom:1px solid var(--line);font:500 10px var(--mono);letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
-  .strip{display:flex;gap:4px;padding:18px 0 4px;flex-wrap:wrap}
-  .cell{flex:1;min-width:56px;height:36px;border:1px solid var(--line);position:relative;cursor:pointer;font:600 10px var(--mono);transition:transform .15s,border-color .15s;padding:0}
+  .strip{display:flex;gap:4px;padding:18px 0 4px}
+  .cell{flex:1;height:36px;border:1px solid var(--line);position:relative;cursor:pointer;font:600 10px var(--mono);transition:transform .15s,border-color .15s;padding:0}
   .cell:hover{transform:translateY(-2px);border-color:var(--ink)}
   .cell .n{position:absolute;top:3px;left:5px;font-size:9px}
   .cell.idle{border-style:dashed;background:transparent;color:var(--muted)}
@@ -61,24 +61,15 @@
   .row.over{background:#F3E2D7;box-shadow:inset 4px 0 0 var(--alert)}
   .row.flash{animation:flash 1.2s}
   @keyframes flash{0%,55%{background:rgba(201,62,18,.14)}100%{background:transparent}}
-  .row.out{animation:rowout .3s forwards}
-  @keyframes rowout{to{opacity:0;transform:translateX(20px)}}
   .idx{font:600 12px var(--mono);color:var(--muted)}
   .avatar{width:40px;height:40px;border:1.5px solid var(--ink);display:grid;place-items:center;font:700 13px var(--sans);background:var(--paper)}
-  .who{display:flex;align-items:center;gap:8px;min-width:0}
-  .who strong{display:block;font:700 14px var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .who span{font:500 10px var(--mono);color:var(--muted);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
-  .del-btn{flex-shrink:0;width:24px;height:24px;border:1px solid transparent;background:transparent;color:var(--line);cursor:pointer;display:grid;place-items:center;transition:.15s;opacity:0}
-  .row:hover .del-btn{opacity:1}
-  .del-btn:hover{color:var(--alert);border-color:var(--alert)}
-  .del-btn svg{width:13px;height:13px}
-  .del-btn.arm{opacity:1;color:#fff;background:var(--alert);border-color:var(--alert);animation:pulse 1s infinite}
+  .who strong{display:block;font:700 14px var(--sans)}
+  .who span{font:500 10px var(--mono);color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
   .tname{font:700 14px var(--sans)}
   .tmeta{font:500 10px var(--mono);color:var(--muted);letter-spacing:.08em;margin-top:5px;text-transform:uppercase}
   .tag{display:inline-block;font:600 9px var(--mono);letter-spacing:.14em;padding:2px 6px;margin-left:8px;transform:translateY(-2px);animation:stamp .3s cubic-bezier(.2,1.4,.4,1) both}
   .tag.ok{color:var(--done);border:1.5px solid var(--done)}
   .tag.late{color:var(--alert);border:1.5px solid var(--alert)}
-  .progzone{position:relative}
   .progzone.empty,.clockzone.empty{font:500 12px var(--mono);color:var(--line)}
 
   .bar-lbl{display:flex;justify-content:space-between;font:600 10px var(--mono);letter-spacing:.12em;color:var(--muted);margin-bottom:5px}
@@ -114,12 +105,13 @@
   .assign-btn:hover{border-style:solid;border-color:var(--ink);background:var(--ink);color:var(--paper)}
   .assign-btn svg{width:14px;height:14px}
 
+    .progzone{position:relative}
   .bigstamp{position:absolute;right:8px;top:50%;transform:translateY(-50%) rotate(-7deg);border:3px solid var(--done);color:var(--done);font:800 12px/1 var(--sans);letter-spacing:.24em;padding:7px 8px 7px 11px;pointer-events:none;mix-blend-mode:multiply;opacity:.9;background:rgba(242,237,224,.6);animation:stamp .35s cubic-bezier(.2,1.4,.4,1) both;z-index:2}
   .bigstamp.late{border-color:var(--alert);color:var(--alert)}
 
   /* ---------- assign form ---------- */
   .aform{grid-column:4/-1;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:4px 0}
-  .tinput{flex:1;min-width:160px;border:0;border-bottom:1.5px solid var(--ink);background:transparent;font:600 14px var(--sans);padding:8px 2px;color:var(--ink);outline:none}
+  .tinput{flex:1;min-width:200px;border:0;border-bottom:1.5px solid var(--ink);background:transparent;font:600 14px var(--sans);padding:8px 2px;color:var(--ink);outline:none}
   .tinput::placeholder{color:var(--muted);font-weight:500}
   .tinput:focus{border-bottom-color:var(--alert)}
   .chips{display:flex;gap:6px}
@@ -129,18 +121,6 @@
   .startbtn{display:inline-flex;gap:10px;align-items:center;font:700 11px var(--sans);letter-spacing:.12em;padding:11px 16px;background:var(--done);border:2px solid var(--done);color:#fff;cursor:pointer;transition:.15s}
   .startbtn:hover{background:#1C5738;border-color:#1C5738}
   .startbtn span{font:600 11px var(--mono);opacity:.85}
-
-  /* ---------- add / remove employees ---------- */
-  .addzone{display:flex;flex-direction:column;align-items:center;padding:22px 0 0}
-  .addbtn{display:inline-flex;align-items:center;gap:10px;font:700 12px var(--sans);letter-spacing:.18em;padding:13px 22px;border:2px dashed var(--ink);background:transparent;color:var(--ink);cursor:pointer;transition:.15s}
-  .addbtn:hover{border-style:solid;background:var(--ink);color:var(--paper)}
-  .addbtn svg{width:16px;height:16px}
-  .empform{display:flex;align-items:center;gap:12px;flex-wrap:wrap;width:100%;max-width:720px;padding:6px 0 2px;animation:tin2 .25s cubic-bezier(.2,1.2,.4,1)}
-  @keyframes tin2{from{opacity:0;transform:translateY(-8px)}}
-  .count{font:600 10px var(--mono);letter-spacing:.14em;color:var(--muted);text-transform:uppercase;margin-top:14px}
-  .empty-state{padding:56px 0 30px;text-align:center}
-  .empty-state .big{font-family:'Archivo Black',var(--sans);font-size:26px;letter-spacing:.02em;text-transform:uppercase;margin-bottom:10px}
-  .empty-state p{font:500 12px/1.8 var(--mono);color:var(--muted);letter-spacing:.06em}
 
   /* ---------- panel / toasts / footer ---------- */
   .panel{position:absolute;top:calc(100% + 10px);right:0;width:min(340px,90vw);background:var(--paper);border:1.5px solid var(--ink);box-shadow:6px 6px 0 rgba(33,29,21,.15);z-index:90}
@@ -156,7 +136,6 @@
   .toast.alert{border-left-color:var(--alert)} .toast.alert svg{color:var(--alert)}
   .toast.done{border-left-color:var(--done)} .toast.done svg{color:var(--done)}
   .toast.over{border-left-color:var(--alert)} .toast.over svg{color:var(--alert)}
-  .toast.info{border-left-color:var(--ink)} .toast.info svg{color:var(--ink)}
   .toast.out{animation:tout .25s forwards}
   @keyframes tin{from{transform:translateX(30px);opacity:0}}
   @keyframes tout{to{transform:translateX(30px);opacity:0}}
@@ -173,6 +152,7 @@
     .progzone{grid-area:prog}.clockzone{grid-area:clock}.actions{grid-area:act}
     .aform{grid-area:task;grid-column:auto}
     .cd{font-size:20px}.clockzone{text-align:right}
+    .bigstamp{display:none}
   }
 </style>
 </head>
@@ -182,9 +162,9 @@
 
   <header class="masthead">
     <div>
-      <div class="kicker">Field Crew · Dispatch Sheet · <span id="crewCount">10</span> hands</div>
+      <div class="kicker">Field Crew · Dispatch Sheet · No. 10</div>
       <h1>Task Board</h1>
-      <div class="tagline">A living roster — add or remove crew members any time. One press of WORK = one day of progress; the bell rings a day out.</div>
+      <div class="tagline">Ten hands, live deadlines. One press of WORK = one day of progress — a 10-day task takes 10 presses, a 5-day task takes 5.</div>
     </div>
     <div class="mast-right">
       <div class="clock" id="clock">0:00:00</div>
@@ -197,7 +177,7 @@
       <div class="tools">
         <button class="tool-btn" id="bellBtn" title="Alerts"><i data-lucide="bell"></i><span class="badge" id="badge" hidden>0</span></button>
         <button class="tool-btn" id="sndBtn" title="Sound"><i data-lucide="volume-2"></i></button>
-        <button class="tool-btn wide" id="resetBtn" title="Clear all tasks">RESET</button>
+        <button class="tool-btn wide" id="resetBtn" title="Clear the board">RESET</button>
         <div class="panel" id="panel" hidden>
           <h3>ALERT LOG</h3>
           <div id="alertList"></div>
@@ -218,19 +198,9 @@
     <span>NO.</span><span></span><span>CREW</span><span>TASK</span><span>PROGRESS</span><span>DUE</span><span style="text-align:right">ACTION</span>
   </div>
   <main id="roster"></main>
-  <div class="addzone">
-    <button class="addbtn" id="addBtn"><i data-lucide="user-plus"></i>ADD EMPLOYEE</button>
-    <form class="empform" id="empForm" hidden>
-      <input class="tinput" name="name" maxlength="40" autocomplete="off" placeholder="Name — e.g. Nadia Rahman" required>
-      <input class="tinput" name="role" maxlength="30" autocomplete="off" placeholder="Role — e.g. Field Operations">
-      <button type="submit" class="startbtn">ADD TO CREW</button>
-      <button type="button" class="xbtn" id="empCancel" title="Cancel"><i data-lucide="x"></i></button>
-    </form>
-    <div class="count" id="rosterCount"></div>
-  </div>
 
   <footer class="foot">
-    <span>Protocol — hover a row to remove a crew member · assign → pick days → 1 press = 1 day of work → final press closes the task → bell at D-1.</span>
+    <span>Protocol — assign → pick days (1/3/5/10) → 1 press = 1 day of work → task closes on the final press → bell at D-1 → miss the clock and the row goes overdue.</span>
     <span>Session-only · nothing leaves this page</span>
   </footer>
 </div>
@@ -239,7 +209,7 @@
 
 <script>
 /* ============================== data ============================== */
-let CREW = [
+const CREW = [
   {id:1, name:'Amara Okafor',    role:'Reports & Analysis'},
   {id:2, name:'Diego Salazar',   role:'Field Operations'},
   {id:3, name:'Priya Nair',      role:'Quality Assurance'},
@@ -251,8 +221,6 @@ let CREW = [
   {id:9, name:'Hana Suzuki',     role:'Communications'},
   {id:10,name:'Yusuf Demir',     role:'IT Support'},
 ];
-let nextId = 11;
-
 const DAY = 60000; // 1 working day = 1 real minute in this demo
 const state = new Map();
 const alerts = [];
@@ -264,7 +232,6 @@ const pad = n => String(n).padStart(2,'0');
 const fmt = ms => { ms = Math.max(0, ms); const s = Math.round(ms/1000); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); };
 const hhmmss = ts => new Date(ts).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
 const icons = () => window.lucide && lucide.createIcons();
-const posOf = emp => CREW.indexOf(emp) + 1;
 
 /* ============================== sound ============================== */
 const sound = (() => {
@@ -303,15 +270,17 @@ function tallySVG(strokes, total, seed, justStamped){
   const lastVert = strokes < total && (strokes % 5 !== 0 || strokes === 0);
   for (let g = 0; g < groups; g++){
     const ox = g * GW;
-    const inGroup = Math.min(Math.max(strokes - g*5, 0), 4);
+    const inGroup = Math.min(Math.max(strokes - g*5, 0), 4); // verticals in this group
     for (let i = 0; i < inGroup; i++){
       const x = ox + 12 + i*17 + (r()*4-2), y1 = 4 + (r()*3-1.5), y2 = 25 + (r()*3-1.5), lean = r()*4-2;
       const isLastGlobal = (g*5 + i === strokes - 1) && lastVert;
       const cls = (justStamped && isLastGlobal) ? ' class="pop"' : '';
       p += `<path${cls} d="M${(x+lean).toFixed(1)} ${y1.toFixed(1)} L${(x-lean).toFixed(1)} ${y2.toFixed(1)}"/>`;
     }
+    // diagonal slash when this group is complete (5th press of the group)
     if (strokes >= (g+1)*5){
-      p += `<path class="slash" d="M${ox+2} 26 L${ox+88} 4"/>`;
+      const start = ox + 2, end = ox + 88;
+      p += `<path class="slash" d="M${start} 26 L${end} 4"/>`;
     }
   }
   return `<svg class="tally" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true">${p}</svg>`;
@@ -322,12 +291,9 @@ function rowHTML(emp){
   const st = state.get(emp.id);
   const initials = emp.name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
   const base = `
-    <div class="idx">${pad(posOf(emp))}</div>
+    <div class="idx">${pad(emp.id)}</div>
     <div class="avatar">${initials}</div>
-    <div class="who">
-      <div style="min-width:0"><strong>${esc(emp.name)}</strong><span>${esc(emp.role)}</span></div>
-      <button class="del-btn" data-act="delEmp" title="Remove from crew"><i data-lucide="trash-2"></i></button>
-    </div>`;
+    <div class="who"><strong>${emp.name}</strong><span>${emp.role}</span></div>`;
 
   if (st.status === 'idle') return `
     <article class="row" data-id="${emp.id}">${base}
@@ -388,29 +354,13 @@ function rowHTML(emp){
   return `<article class="row ${done?'done':''} ${soon?'soon':''} ${overdue?'over':''}" data-id="${emp.id}">${base}${taskzone}${progzone}${clockzone}${actions}</article>`;
 }
 
-function emptyHTML(){
-  return `<div class="empty-state">
-    <div class="big">The roster is empty</div>
-    <p>Nobody on the crew yet.<br>Use ADD EMPLOYEE below to start building the team.</p>
-  </div>`;
-}
-
 const roster = $('#roster');
 function renderRow(id){
   const el = roster.querySelector(`.row[data-id="${id}"]`);
-  const emp = CREW.find(c => c.id === id);
-  if (el && emp) el.outerHTML = rowHTML(emp);
+  if (el) el.outerHTML = rowHTML(CREW.find(c => c.id === id));
   icons();
 }
-function renderRoster(){
-  roster.innerHTML = CREW.length ? CREW.map(rowHTML).join('') : emptyHTML();
-  $('#crewCount').textContent = CREW.length;
-  $('#rosterCount').textContent = CREW.length
-    ? `${CREW.length} crew member${CREW.length>1?'s':''} on the sheet`
-    : '';
-  icons();
-}
-function renderAll(){ renderRoster(); }
+function renderAll(){ roster.innerHTML = CREW.map(rowHTML).join(''); icons(); }
 
 /* ============================== strip & stats ============================== */
 const strip = $('#strip');
@@ -420,7 +370,7 @@ function renderStrip(){
     let cls = 'idle';
     if (st.status === 'active') cls = (st.task.deadlineTs - Date.now() <= 0) ? 'over' : 'active';
     else if (st.status === 'done') cls = 'done';
-    return `<button class="cell ${cls}" data-go="${c.id}" title="${esc(c.name)}"><span class="n">${pad(posOf(c))}</span></button>`;
+    return `<button class="cell ${cls}" data-go="${c.id}" title="${c.name}"><span class="n">${pad(c.id)}</span></button>`;
   }).join('');
 }
 function refreshStats(){
@@ -436,71 +386,11 @@ function refreshStats(){
 strip.addEventListener('click', e => {
   const c = e.target.closest('[data-go]'); if (!c) return;
   const row = roster.querySelector(`.row[data-id="${c.dataset.go}"]`);
-  if (!row) return;
   row.scrollIntoView({behavior:'smooth', block:'center'});
   row.classList.remove('flash'); void row.offsetWidth; row.classList.add('flash');
 });
 
-/* ============================== add / remove employees ============================== */
-const addBtn = $('#addBtn'), empForm = $('#empForm');
-addBtn.addEventListener('click', () => {
-  empForm.hidden = !empForm.hidden;
-  addBtn.hidden = !empForm.hidden;
-  if (!empForm.hidden) empForm.name.focus();
-});
- $('#empCancel').addEventListener('click', () => {
-  empForm.hidden = true; addBtn.hidden = false; empForm.reset();
-});
-empForm.addEventListener('submit', e => {
-  e.preventDefault();
-  const name = empForm.name.value.trim();
-  if (!name) return;
-  const role = empForm.role.value.trim() || 'Crew';
-  const emp = {id: nextId++, name, role};
-  CREW.push(emp);
-  state.set(emp.id, {status:'idle'});
-  empForm.reset(); empForm.hidden = true; addBtn.hidden = false;
-  renderRoster(); refreshStats(); sound.tick();
-  pushToast('info', 'Crew member added', `${esc(name)} joined the sheet as ${esc(role)}. Assign a task whenever ready.`);
-});
-
-let armedDel = null, delT;
-roster.addEventListener('click', e => {
-  const del = e.target.closest('[data-act="delEmp"]');
-  if (del){
-    const id = +del.closest('.row').dataset.id;
-    const emp = CREW.find(c => c.id === id);
-    if (!emp) return;
-    const hasWork = state.get(id).status !== 'idle';
-    if (hasWork && armedDel !== id){
-      // two-step confirm when there's an active/finished task at stake
-      clearTimeout(delT); armedDel = id;
-      del.classList.add('arm'); del.innerHTML = '<i data-lucide="check"></i>'; icons();
-      delT = setTimeout(() => { armedDel = null; renderRow(id); }, 2600);
-      return;
-    }
-    clearTimeout(delT); armedDel = null;
-    CREW = CREW.filter(c => c.id !== id);
-    state.delete(id);
-    const rowEl = roster.querySelector(`.row[data-id="${id}"]`);
-    if (rowEl){
-      rowEl.classList.add('out');
-      setTimeout(() => { renderRoster(); refreshStats(); }, 280);
-    } else { renderRoster(); refreshStats(); }
-    sound.tick();
-    pushToast('info', 'Crew member removed', `${esc(emp.name)} was taken off the sheet. Numbering re-flowed automatically.`);
-    return;
-  }
-
-  const btn = e.target.closest('[data-act]'); if (!btn) return;
-  const id = +btn.closest('.row').dataset.id;
-  const act = btn.dataset.act;
-  if (act === 'assign'){ state.set(id, {status:'assigning', draftM:5}); renderRow(id); setTimeout(() => roster.querySelector(`.row[data-id="${id}"] .tinput`)?.focus(), 60); }
-  if (act === 'cancelAssign' || act === 'clear'){ state.set(id, {status:'idle'}); renderRow(id); refreshStats(); }
-  if (act === 'stroke') doStroke(id);
-});
-
-/* ============================== task actions ============================== */
+/* ============================== actions ============================== */
 function startTask(id, title, days){
   const t0 = Date.now();
   state.set(id, {status:'active', task:{
@@ -515,24 +405,40 @@ function doStroke(id){
   if (st.status !== 'active') return;
   const t = st.task, total = t.minutes, emp = CREW.find(c => c.id === id);
   t.strokes++; st.just = true; sound.tick();
-  if (t.strokes >= total){
+  if (t.strokes >= total){          // final press = task closed
     t.finishedTs = Date.now();
     t.late = t.finishedTs > t.deadlineTs;
     st.status = 'done';
     sound.done();
-    if (emp) pushToast(t.late ? 'over' : 'done', t.late ? 'Closed late' : 'Task complete',
-      `${esc(emp.name)} — “${esc(t.title)}” ${t.late
+    pushToast(t.late ? 'over' : 'done', t.late ? 'Closed late' : 'Task complete',
+      `${emp.name} — “${esc(t.title)}” ${t.late
         ? 'was closed '+fmt(t.finishedTs-t.deadlineTs)+' past the deadline.'
-        : 'finished with '+fmt(t.deadlineTs-t.finishedTs)+' to spare. All '+total+' strokes in.'}`);
+        : 'finished with '+fmt(t.deadlineTs-t.finishedTs)+' to spare. All ${total} strokes in.'.replace('${total}', total)}`);
   }
   renderRow(id);
-  if (st.status === 'active'){
+  if (st.status === 'active'){ // animate bar sliding to new value
     const bar = roster.querySelector(`.row[data-id="${id}"] .bar i`);
     if (bar){ const w = bar.style.width; bar.style.width = '0%'; void bar.offsetWidth; requestAnimationFrame(() => bar.style.width = w); }
   }
   refreshStats();
 }
 
+roster.addEventListener('click', e => {
+  const chip = e.target.closest('.chips button');
+  if (chip){
+    const row = chip.closest('.row'), st = state.get(+row.dataset.id);
+    st.draftM = +chip.dataset.m;
+    row.querySelectorAll('.chips button').forEach(b => b.classList.toggle('on', b === chip));
+    row.querySelector('.startbtn span').textContent = fmt(st.draftM * DAY) + ' · ' + st.draftM + ' PRESSES';
+    return;
+  }
+  const btn = e.target.closest('[data-act]'); if (!btn) return;
+  const id = +btn.closest('.row').dataset.id;
+  const act = btn.dataset.act;
+  if (act === 'assign'){ state.set(id, {status:'assigning', draftM:5}); renderRow(id); setTimeout(() => roster.querySelector(`.row[data-id="${id}"] .tinput`)?.focus(), 60); }
+  if (act === 'cancelAssign' || act === 'clear'){ state.set(id, {status:'idle'}); renderRow(id); refreshStats(); }
+  if (act === 'stroke') doStroke(id);
+});
 roster.addEventListener('submit', e => {
   const f = e.target.closest('.aform'); if (!f) return;
   e.preventDefault();
@@ -546,7 +452,7 @@ const toasts = $('#toasts');
 function pushToast(kind, title, text){
   const el = document.createElement('div');
   el.className = 'toast ' + kind;
-  const ico = kind === 'done' ? 'check' : (kind === 'over' ? 'alarm-clock' : (kind === 'info' ? 'users' : 'bell-ring'));
+  const ico = kind === 'done' ? 'check' : (kind === 'over' ? 'alarm-clock' : 'bell-ring');
   el.innerHTML = `<i data-lucide="${ico}"></i><div><strong>${title}</strong><span>${text}</span></div>`;
   toasts.appendChild(el); icons();
   el.addEventListener('click', () => el.remove());
@@ -574,7 +480,7 @@ document.addEventListener('click', e => {
   $('#sndBtn').innerHTML = `<i data-lucide="${on ? 'volume-2' : 'volume-x'}"></i>`; icons();
 });
 
-/* reset clears tasks only — the roster itself is managed by add/remove */
+/* two-step reset — no confirm() dialogs */
 const resetBtn = $('#resetBtn');
 let armed = false, armT;
 resetBtn.addEventListener('click', () => {
@@ -587,8 +493,8 @@ resetBtn.addEventListener('click', () => {
   resetBtn.classList.remove('arm'); resetBtn.textContent = 'RESET';
   CREW.forEach(c => state.set(c.id, {status:'idle'}));
   alerts.length = 0; unread = 0; updateBell(); renderPanel();
-  renderRoster(); refreshStats();
-  pushToast('done', 'Board reset', 'All tasks cleared. The roster itself is untouched.');
+  renderAll(); refreshStats();
+  pushToast('done', 'Board reset', 'All tasks cleared. Assign fresh ones whenever ready.');
 });
 
 /* ============================== the clock ============================== */
@@ -604,6 +510,7 @@ setInterval(() => {
     if (cd) cd.textContent = fmt(rem);
     if (rem > 0 && sm) sm.textContent = 'D-' + Math.ceil(rem / DAY) + ' LEFT';
 
+    // "day before the last day" → notification fires
     if (!t.alerted && rem <= DAY && rem > 0){
       t.alerted = true; unread++; sound.alert();
       const msg = `${emp.name} — “${t.title}” hits its deadline in 1 day (60s).`;
@@ -612,6 +519,7 @@ setInterval(() => {
       updateBell(); refreshStats();
       rowEl.classList.add('soon');
     }
+    // deadline passed unfinished → overdue
     if (rem <= 0 && !t.overNotified){
       t.overNotified = true; unread++; sound.alert();
       rowEl.classList.remove('soon'); rowEl.classList.add('over');
@@ -629,14 +537,12 @@ setInterval(() => {
 /* ============================== boot ============================== */
  $('#date').textContent = new Date().toLocaleDateString('en-GB', {weekday:'short', day:'2-digit', month:'short', year:'numeric'}).toUpperCase();
 CREW.forEach(c => state.set(c.id, {status:'idle'}));
-renderRoster(); refreshStats(); updateBell(); renderPanel();
+renderAll(); refreshStats(); updateBell(); renderPanel();
 
 // sample task, exactly your example: employee 01, a report, 5 days = 5 presses
-if (CREW.length){
-  startTask(CREW[0].id, 'Quarterly report — first draft', 5);
-  pushToast('info', 'Sample task is live',
-    `${esc(CREW[0].name)} is on “Quarterly report — first draft”: 5 days = 5 minutes = 5 presses of WORK (20% each). Hover any row to remove a member, or use ADD EMPLOYEE to grow the crew.`);
-}
+startTask(1, 'Quarterly report — first draft', 5);
+pushToast('alert', 'Sample task is live',
+  'Amara Okafor is on “Quarterly report — first draft”: 5 days = 5 minutes = 5 presses of WORK (20% each). The bell rings at D-1.');
 </script>
 </body>
 </html>
