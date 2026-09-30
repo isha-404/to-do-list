@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crew Dispatch — Task Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Archivo+Black&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@0.462.0/dist/umd/lucide.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --paper:#F2EDE0; --paper2:#E7E1CE; --ink:#211D15; --muted:#6E6754;
+    --line:#CBC3AC; --alert:#C93E12; --done:#256B46;
+    --mono:'IBM Plex Mono',monospace; --sans:'Archivo',sans-serif;
+    --rowcols:44px 52px 185px 1fr 250px 118px 150px;
+  }
+  html{scroll-behavior:smooth}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+  .grain{position:fixed;inset:0;pointer-events:none;z-index:50;mix-blend-mode:multiply;
+    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="220" height="220"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2"/><feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.05 0"/></filter><rect width="220" height="220" filter="url(%23n)"/></svg>')}
+  .wrap{max-width:1240px;margin:0 auto;padding:30px 32px 90px}
+
+  /* ---------- masthead ---------- */
+  .masthead{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;padding-bottom:20px;border-bottom:3px solid var(--ink)}
+  .kicker{font:600 11px/1 var(--mono);letter-spacing:.24em;color:var(--alert);text-transform:uppercase;margin-bottom:12px}
+  h1{font-family:'Archivo Black',var(--sans);font-size:clamp(38px,5.6vw,62px);line-height:.95;letter-spacing:-.01em;text-transform:uppercase}
+  .tagline{margin-top:12px;font-size:13px;color:var(--muted)}
+  .mast-right{display:flex;flex-direction:column;align-items:flex-end;gap:10px;flex-shrink:0}
+  .clock{font:600 32px/1 var(--mono)}
+  .date{font:500 10px var(--mono);letter-spacing:.16em;color:var(--muted);text-transform:uppercase}
+  .counters{display:flex;gap:16px;font:500 11px var(--mono);letter-spacing:.08em}
+  .counters b{font-weight:600}
+  #cOver{color:var(--alert)} #cDone{color:var(--done)}
+  .tools{display:flex;gap:8px;position:relative}
+  .tool-btn{position:relative;width:36px;height:36px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);display:grid;place-items:center;cursor:pointer;transition:.15s}
+  .tool-btn:hover{background:var(--ink);color:var(--paper)}
+  .tool-btn svg{width:16px;height:16px}
+  .tool-btn.wide{width:auto;padding:0 12px;font:700 10px var(--mono);letter-spacing:.16em}
+  .tool-btn.arm{border-color:var(--alert);color:var(--alert)}
+  .tool-btn.arm:hover{background:var(--alert);color:#fff}
+  .badge{position:absolute;top:-7px;right:-7px;min-width:17px;height:17px;background:var(--alert);color:#fff;font:700 10px/17px var(--mono);text-align:center;padding:0 3px}
+
+  /* ---------- scale note / strip ---------- */
+  .scale{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:9px 0;border-bottom:1px solid var(--line);font:500 10px var(--mono);letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+  .strip{display:flex;gap:4px;padding:18px 0 4px;flex-wrap:wrap}
+  .cell{flex:1;min-width:56px;height:36px;border:1px solid var(--line);position:relative;cursor:pointer;font:600 10px var(--mono);transition:transform .15s,border-color .15s;padding:0}
+  .cell:hover{transform:translateY(-2px);border-color:var(--ink)}
+  .cell .n{position:absolute;top:3px;left:5px;font-size:9px}
+  .cell.idle{border-style:dashed;background:transparent;color:var(--muted)}
+  .cell.active{border-color:var(--ink);color:var(--ink);background:repeating-linear-gradient(45deg,rgba(33,29,21,.3) 0 2px,transparent 2px 7px)}
+  .cell.done{background:var(--done);border-color:var(--done);color:#fff}
+  .cell.over{background:var(--alert);border-color:var(--alert);color:#fff}
+  .strip-hint{font:500 10px var(--mono);letter-spacing:.1em;color:var(--muted);text-transform:uppercase;padding-bottom:16px}
+
+  /* ---------- roster ---------- */
+  .cols{display:grid;grid-template-columns:var(--rowcols);gap:14px;padding:10px 0 8px;border-bottom:2px solid var(--ink);font:600 10px var(--mono);letter-spacing:.2em;color:var(--muted)}
+  .row{display:grid;grid-template-columns:var(--rowcols);gap:14px;align-items:center;padding:15px 0;border-bottom:1px solid var(--line);position:relative;transition:background .3s}
+  .row:hover{background:rgba(33,29,21,.03)}
+  .row.done{background:#E5EADC;box-shadow:inset 4px 0 0 var(--done)}
+  .row.over{background:#F3E2D7;box-shadow:inset 4px 0 0 var(--alert)}
+  .row.flash{animation:flash 1.2s}
+  @keyframes flash{0%,55%{background:rgba(201,62,18,.14)}100%{background:transparent}}
+  .row.out{animation:rowout .3s forwards}
+  @keyframes rowout{to{opacity:0;transform:translateX(20px)}}
+  .idx{font:600 12px var(--mono);color:var(--muted)}
+  .avatar{width:40px;height:40px;border:1.5px solid var(--ink);display:grid;place-items:center;font:700 13px var(--sans);background:var(--paper)}
+  .who{display:flex;align-items:center;gap:8px;min-width:0}
+  .who strong{display:block;font:700 14px var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .who span{font:500 10px var(--mono);color:var(--muted);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+  .del-btn{flex-shrink:0;width:24px;height:24px;border:1px solid transparent;background:transparent;color:var(--line);cursor:pointer;display:grid;place-items:center;transition:.15s;opacity:0}
+  .row:hover .del-btn{opacity:1}
+  .del-btn:hover{color:var(--alert);border-color:var(--alert)}
+  .del-btn svg{width:13px;height:13px}
+  .del-btn.arm{opacity:1;color:#fff;background:var(--alert);border-color:var(--alert);animation:pulse 1s infinite}
+  .tname{font:700 14px var(--sans)}
+  .tmeta{font:500 10px var(--mono);color:var(--muted);letter-spacing:.08em;margin-top:5px;text-transform:uppercase}
+  .tag{display:inline-block;font:600 9px var(--mono);letter-spacing:.14em;padding:2px 6px;margin-left:8px;transform:translateY(-2px);animation:stamp .3s cubic-bezier(.2,1.4,.4,1) both}
+  .tag.ok{color:var(--done);border:1.5px solid var(--done)}
+  .tag.late{color:var(--alert);border:1.5px solid var(--alert)}
+  .progzone{position:relative}
+  .progzone.empty,.clockzone.empty{font:500 12px var(--mono);color:var(--line)}
+
+  .bar-lbl{display:flex;justify-content:space-between;font:600 10px var(--mono);letter-spacing:.12em;color:var(--muted);margin-bottom:5px}
+  .bar{height:8px;background:var(--paper2);border:1px solid var(--ink);position:relative}
+  .bar i{position:absolute;top:0;bottom:0;left:0;width:0%;background:var(--ink);transition:width .45s cubic-bezier(.2,.9,.3,1)}
+  .row.done .bar i{background:var(--done)}
+  .tally{margin-top:7px;display:block}
+  .tally path{stroke:var(--ink);stroke-width:3;stroke-linecap:round;fill:none}
+  .tally .slash{stroke-width:3.5;stroke-dasharray:160;stroke-dashoffset:160;animation:draw .45s .05s ease-out forwards}
+  @keyframes draw{to{stroke-dashoffset:0}}
+  .pop{animation:stamp .28s cubic-bezier(.2,1.4,.4,1) both;transform-origin:center;transform-box:fill-box}
+  @keyframes stamp{0%{transform:scale(1.7);opacity:0}60%{transform:scale(.92);opacity:1}100%{transform:scale(1)}}
+
+  .clockzone{text-align:right;justify-self:end}
+  .cd{font:600 26px/1 var(--mono);letter-spacing:.02em}
+  .cd.ok{color:var(--done)} .cd.late-cd{color:var(--alert)}
+  .clockzone small{display:block;font:600 9px var(--mono);letter-spacing:.16em;color:var(--muted);margin-top:5px;text-transform:uppercase}
+  .row.soon .cd{color:var(--alert);animation:pulse 1s infinite}
+  .row.over .cd{color:var(--alert)}
+  @keyframes pulse{50%{opacity:.4}}
+
+  .actions{display:flex;gap:8px;justify-content:flex-end;align-items:center}
+  .workbtn{display:inline-flex;align-items:center;gap:8px;font:700 12px var(--sans);letter-spacing:.1em;padding:11px 14px;border:2px solid var(--ink);background:var(--ink);color:var(--paper);cursor:pointer;transition:.15s}
+  .workbtn:hover{background:transparent;color:var(--ink)}
+  .workbtn:active{transform:translateY(2px)}
+  .workbtn svg{width:15px;height:15px}
+  .workbtn .n{font:600 11px var(--mono);background:var(--paper);color:var(--ink);padding:2px 6px;letter-spacing:0}
+  .workbtn:hover .n{background:var(--paper2)}
+  .xbtn{width:36px;height:36px;border:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer;display:grid;place-items:center;transition:.15s}
+  .xbtn:hover{border-color:var(--alert);color:var(--alert)}
+  .xbtn svg{width:14px;height:14px}
+  .assign-btn{display:inline-flex;align-items:center;gap:8px;font:700 11px var(--sans);letter-spacing:.16em;padding:10px 14px;border:1.5px dashed var(--muted);background:transparent;color:var(--ink);cursor:pointer;transition:.15s}
+  .assign-btn:hover{border-style:solid;border-color:var(--ink);background:var(--ink);color:var(--paper)}
+  .assign-btn svg{width:14px;height:14px}
+
+  .bigstamp{position:absolute;right:8px;top:50%;transform:translateY(-50%) rotate(-7deg);border:3px solid var(--done);color:var(--done);font:800 12px/1 var(--sans);letter-spacing:.24em;padding:7px 8px 7px 11px;pointer-events:none;mix-blend-mode:multiply;opacity:.9;background:rgba(242,237,224,.6);animation:stamp .35s cubic-bezier(.2,1.4,.4,1) both;z-index:2}
+  .bigstamp.late{border-color:var(--alert);color:var(--alert)}
+
+  /* ---------- assign form ---------- */
+  .aform{grid-column:4/-1;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:4px 0}
+  .tinput{flex:1;min-width:160px;border:0;border-bottom:1.5px solid var(--ink);background:transparent;font:600 14px var(--sans);padding:8px 2px;color:var(--ink);outline:none}
+  .tinput::placeholder{color:var(--muted);font-weight:500}
+  .tinput:focus{border-bottom-color:var(--alert)}
+  .chips{display:flex;gap:6px}
+  .chips button{font:600 10px var(--mono);letter-spacing:.06em;padding:9px 10px;border:1px solid var(--line);background:transparent;cursor:pointer;color:var(--muted);transition:.15s}
+  .chips button:hover{border-color:var(--ink);color:var(--ink)}
+  .chips button.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+  .startbtn{display:inline-flex;gap:10px;align-items:center;font:700 11px var(--sans);letter-spacing:.12em;padding:11px 16px;background:var(--done);border:2px solid var(--done);color:#fff;cursor:pointer;transition:.15s}
+  .startbtn:hover{background:#1C5738;border-color:#1C5738}
+  .startbtn span{font:600 11px var(--mono);opacity:.85}
+
+  /* ---------- add / remove employees ---------- */
+  .addzone{display:flex;flex-direction:column;align-items:center;padding:22px 0 0}
+  .addbtn{display:inline-flex;align-items:center;gap:10px;font:700 12px var(--sans);letter-spacing:.18em;padding:13px 22px;border:2px dashed var(--ink);background:transparent;color:var(--ink);cursor:pointer;transition:.15s}
+  .addbtn:hover{border-style:solid;background:var(--ink);color:var(--paper)}
+  .addbtn svg{width:16px;height:16px}
+  .empform{display:flex;align-items:center;gap:12px;flex-wrap:wrap;width:100%;max-width:720px;padding:6px 0 2px;animation:tin2 .25s cubic-bezier(.2,1.2,.4,1)}
+  @keyframes tin2{from{opacity:0;transform:translateY(-8px)}}
+  .count{font:600 10px var(--mono);letter-spacing:.14em;color:var(--muted);text-transform:uppercase;margin-top:14px}
+  .empty-state{padding:56px 0 30px;text-align:center}
+  .empty-state .big{font-family:'Archivo Black',var(--sans);font-size:26px;letter-spacing:.02em;text-transform:uppercase;margin-bottom:10px}
+  .empty-state p{font:500 12px/1.8 var(--mono);color:var(--muted);letter-spacing:.06em}
+
+  /* ---------- panel / toasts / footer ---------- */
+  .panel{position:absolute;top:calc(100% + 10px);right:0;width:min(340px,90vw);background:var(--paper);border:1.5px solid var(--ink);box-shadow:6px 6px 0 rgba(33,29,21,.15);z-index:90}
+  .panel h3{font:700 10px var(--mono);letter-spacing:.22em;padding:11px 14px;border-bottom:1px solid var(--line)}
+  .alert-item{padding:11px 14px;border-bottom:1px solid var(--line);font:400 12px/1.5 var(--sans)}
+  .alert-item time{display:block;font:600 9px var(--mono);letter-spacing:.14em;color:var(--muted);margin-bottom:3px}
+  .alert-item.empty{color:var(--muted)}
+  .toasts{position:fixed;right:20px;bottom:20px;display:flex;flex-direction:column;gap:10px;z-index:100;width:min(370px,calc(100vw - 40px))}
+  .toast{display:flex;gap:12px;align-items:flex-start;background:var(--paper);border:1.5px solid var(--ink);border-left:5px solid var(--ink);padding:12px 14px;box-shadow:4px 4px 0 rgba(33,29,21,.18);cursor:pointer;animation:tin .3s cubic-bezier(.2,1.2,.4,1)}
+  .toast svg{width:17px;height:17px;flex-shrink:0;margin-top:1px}
+  .toast strong{display:block;font:700 11px var(--sans);letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px}
+  .toast span{font:400 12px/1.5 var(--sans);color:var(--muted)}
+  .toast.alert{border-left-color:var(--alert)} .toast.alert svg{color:var(--alert)}
+  .toast.done{border-left-color:var(--done)} .toast.done svg{color:var(--done)}
+  .toast.over{border-left-color:var(--alert)} .toast.over svg{color:var(--alert)}
+  .toast.info{border-left-color:var(--ink)} .toast.info svg{color:var(--ink)}
+  .toast.out{animation:tout .25s forwards}
+  @keyframes tin{from{transform:translateX(30px);opacity:0}}
+  @keyframes tout{to{transform:translateX(30px);opacity:0}}
+  .foot{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:26px;padding-top:14px;border-top:2px solid var(--ink);font:500 10px/1.7 var(--mono);letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+
+  @media(max-width:960px){
+    .wrap{padding:24px 18px 70px}
+    .masthead{flex-direction:column;align-items:flex-start}
+    .mast-right{align-items:flex-start}
+    .cols{display:none}
+    .row{grid-template-columns:36px 44px 1fr auto;gap:12px;
+      grid-template-areas:"idx av who clock" "task task task task" "prog prog prog prog" "act act act act"}
+    .idx{grid-area:idx}.avatar{grid-area:av}.who{grid-area:who}.taskzone{grid-area:task}
+    .progzone{grid-area:prog}.clockzone{grid-area:clock}.actions{grid-area:act}
+    .aform{grid-area:task;grid-column:auto}
+    .cd{font-size:20px}.clockzone{text-align:right}
+  }
+</style>
+</head>
+<body>
+<div class="grain"></div>
+<div class="wrap">
+
+  <header class="masthead">
+    <div>
+      <div class="kicker">Field Crew · Dispatch Sheet · <span id="crewCount">10</span> hands</div>
+      <h1>Task Board</h1>
+      <div class="tagline">A living roster — add or remove crew members any time. One press of WORK = one day of progress; the bell rings a day out.</div>
+    </div>
+    <div class="mast-right">
+      <div class="clock" id="clock">0:00:00</div>
+      <div class="date" id="date"></div>
+      <div class="counters">
+        <span>ACTIVE <b id="cAct">0</b></span>
+        <span>DONE <b id="cDone">0</b></span>
+        <span>OVERDUE <b id="cOver">0</b></span>
+      </div>
+      <div class="tools">
+        <button class="tool-btn" id="bellBtn" title="Alerts"><i data-lucide="bell"></i><span class="badge" id="badge" hidden>0</span></button>
+        <button class="tool-btn" id="sndBtn" title="Sound"><i data-lucide="volume-2"></i></button>
+        <button class="tool-btn wide" id="resetBtn" title="Clear all tasks">RESET</button>
+        <div class="panel" id="panel" hidden>
+          <h3>ALERT LOG</h3>
+          <div id="alertList"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="scale">
+    <span>Demo time — 1 minute real time = 1 working day</span>
+    <span>Rule — presses needed = days assigned · deadline alert fires at D-1</span>
+  </div>
+
+  <div class="strip" id="strip"></div>
+  <div class="strip-hint">Crew strip — click a cell to jump to that row</div>
+
+  <div class="cols">
+    <span>NO.</span><span></span><span>CREW</span><span>TASK</span><span>PROGRESS</span><span>DUE</span><span style="text-align:right">ACTION</span>
+  </div>
+  <main id="roster"></main>
+  <div class="addzone">
+    <button class="addbtn" id="addBtn"><i data-lucide="user-plus"></i>ADD EMPLOYEE</button>
+    <form class="empform" id="empForm" hidden>
+      <input class="tinput" name="name" maxlength="40" autocomplete="off" placeholder="Name — e.g. Nadia Rahman" required>
+      <input class="tinput" name="role" maxlength="30" autocomplete="off" placeholder="Role — e.g. Field Operations">
+      <button type="submit" class="startbtn">ADD TO CREW</button>
+      <button type="button" class="xbtn" id="empCancel" title="Cancel"><i data-lucide="x"></i></button>
+    </form>
+    <div class="count" id="rosterCount"></div>
+  </div>
+
+  <footer class="foot">
+    <span>Protocol — hover a row to remove a crew member · assign → pick days → 1 press = 1 day of work → final press closes the task → bell at D-1.</span>
+    <span>Session-only · nothing leaves this page</span>
+  </footer>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+/* ============================== data ============================== */
+let CREW = [
+  {id:1, name:'Amara Okafor',    role:'Reports & Analysis'},
+  {id:2, name:'Diego Salazar',   role:'Field Operations'},
+  {id:3, name:'Priya Nair',      role:'Quality Assurance'},
+  {id:4, name:'Tomasz Kowalski', role:'Logistics'},
+  {id:5, name:'Mei-Ling Chen',   role:'Product Design'},
+  {id:6, name:'Samuel Adeyemi',  role:'Accounts'},
+  {id:7, name:'Ingrid Larsen',   role:'Compliance'},
+  {id:8, name:'Rafael Torres',   role:'Procurement'},
+  {id:9, name:'Hana Suzuki',     role:'Communications'},
+  {id:10,name:'Yusuf Demir',     role:'IT Support'},
+];
+let nextId = 11;
+
+const DAY = 60000; // 1 working day = 1 real minute in this demo
+const state = new Map();
+const alerts = [];
+let unread = 0;
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad = n => String(n).padStart(2,'0');
+const fmt = ms => { ms = Math.max(0, ms); const s = Math.round(ms/1000); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); };
+const hhmmss = ts => new Date(ts).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+const icons = () => window.lucide && lucide.createIcons();
+const posOf = emp => CREW.indexOf(emp) + 1;
+
+/* ============================== sound ============================== */
+const sound = (() => {
+  let ctx, on = true;
+  const ac = () => {
+    if (!ctx) { try { ctx = new (window.AudioContext||window.webkitAudioContext)(); } catch(e){} }
+    if (ctx && ctx.state === 'suspended') ctx.resume();
+    return ctx;
+  };
+  function b(f, dur, delay=0, type='square', vol=.045){
+    const c = ac(); if (!c || !on) return;
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.value = f;
+    g.gain.setValueAtTime(vol, c.currentTime + delay);
+    g.gain.exponentialRampToValueAtTime(.0001, c.currentTime + delay + dur);
+    o.connect(g).connect(c.destination);
+    o.start(c.currentTime + delay); o.stop(c.currentTime + delay + dur + .02);
+  }
+  return {
+    warm: ac,
+    tick: () => b(1500,.05,0,'square',.035),
+    done: () => { b(523,.1); b(659,.1,.11); b(784,.22,.22,'triangle',.06); },
+    alert: () => { b(880,.14,0,'sine',.07); b(660,.18,.18,'sine',.07); },
+    toggle(){ on = !on; return on; }
+  };
+})();
+document.addEventListener('pointerdown', () => sound.warm(), {once:true});
+
+/* ============================== tally marks (groups of 5) ============================== */
+function rng(seed){ let s = seed; return () => (s = (s*9301+49297)%233280) / 233280; }
+function tallySVG(strokes, total, seed, justStamped){
+  const r = rng(seed);
+  const groups = Math.ceil(total / 5);
+  const GW = 96, H = 30, W = groups * GW - 4;
+  let p = '';
+  const lastVert = strokes < total && (strokes % 5 !== 0 || strokes === 0);
+  for (let g = 0; g < groups; g++){
+    const ox = g * GW;
+    const inGroup = Math.min(Math.max(strokes - g*5, 0), 4);
+    for (let i = 0; i < inGroup; i++){
+      const x = ox + 12 + i*17 + (r()*4-2), y1 = 4 + (r()*3-1.5), y2 = 25 + (r()*3-1.5), lean = r()*4-2;
+      const isLastGlobal = (g*5 + i === strokes - 1) && lastVert;
+      const cls = (justStamped && isLastGlobal) ? ' class="pop"' : '';
+      p += `<path${cls} d="M${(x+lean).toFixed(1)} ${y1.toFixed(1)} L${(x-lean).toFixed(1)} ${y2.toFixed(1)}"/>`;
+    }
+    if (strokes >= (g+1)*5){
+      p += `<path class="slash" d="M${ox+2} 26 L${ox+88} 4"/>`;
+    }
+  }
+  return `<svg class="tally" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true">${p}</svg>`;
+}
+
+/* ============================== render row ============================== */
+function rowHTML(emp){
+  const st = state.get(emp.id);
+  const initials = emp.name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+  const base = `
+    <div class="idx">${pad(posOf(emp))}</div>
+    <div class="avatar">${initials}</div>
+    <div class="who">
+      <div style="min-width:0"><strong>${esc(emp.name)}</strong><span>${esc(emp.role)}</span></div>
+      <button class="del-btn" data-act="delEmp" title="Remove from crew"><i data-lucide="trash-2"></i></button>
+    </div>`;
+
+  if (st.status === 'idle') return `
+    <article class="row" data-id="${emp.id}">${base}
+      <div class="taskzone"><button class="assign-btn" data-act="assign"><i data-lucide="plus"></i>ASSIGN TASK</button></div>
+      <div class="progzone empty">—</div>
+      <div class="clockzone empty">–:––</div>
+      <div class="actions"></div>
+    </article>`;
+
+  if (st.status === 'assigning') return `
+    <article class="row" data-id="${emp.id}">${base}
+      <form class="aform">
+        <input class="tinput" name="title" maxlength="60" autocomplete="off" placeholder="Task — e.g. Prepare quarterly report">
+        <div class="chips">${[1,3,5,10].map(m =>
+          `<button type="button" data-m="${m}" class="${m===st.draftM?'on':''}">${m} day${m>1?'s':''}</button>`).join('')}</div>
+        <button type="submit" class="startbtn">START CLOCK <span>${fmt(st.draftM*DAY)} · ${st.draftM} PRESSES</span></button>
+        <button type="button" class="xbtn" data-act="cancelAssign" title="Cancel"><i data-lucide="x"></i></button>
+      </form>
+    </article>`;
+
+  const t = st.task, total = t.minutes, rem = t.deadlineTs - Date.now();
+  const done = st.status === 'done';
+  const overdue = !done && rem <= 0;
+  const soon = !done && !overdue && rem <= DAY;
+  const pct = Math.round(t.strokes / total * 100);
+  const just = st.just; st.just = false;
+  const left = total - t.strokes;
+
+  const stamp = done ? `<div class="bigstamp ${t.late?'late':''}">${t.late?'LATE':'COMPLETE'}</div>` : '';
+
+  const taskzone = `
+    <div class="taskzone">
+      <div class="tname">${esc(t.title)}${done ? (t.late ? ' <b class="tag late">DONE · LATE</b>' : ' <b class="tag ok">COMPLETE</b>') : (overdue ? ' <b class="tag late">OVERDUE</b>' : '')}</div>
+      <div class="tmeta">STARTED ${hhmmss(t.startedTs)} · DUE ${hhmmss(t.deadlineTs)} · ${total}D = ${total} PRESSES</div>
+    </div>`;
+
+  const progzone = `
+    <div class="progzone">
+      <div class="bar-lbl"><span>${t.strokes}/${total} STROKES</span><span>${pct}%</span></div>
+      <div class="bar"><i style="width:${pct}%"></i></div>
+      ${tallySVG(t.strokes, total, t.seed, just)}
+      ${stamp}
+    </div>`;
+
+  let clockzone, actions;
+  if (done){
+    clockzone = `<div class="clockzone"><div class="cd ${t.late?'late-cd':'ok'}">${t.late?'LATE':'DONE'}</div>
+      <small>${t.late ? 'CLOSED '+fmt(t.finishedTs-t.deadlineTs)+' OVER' : 'WITH '+fmt(t.deadlineTs-t.finishedTs)+' TO SPARE'}</small></div>`;
+    actions = `<div class="actions"><button class="xbtn" data-act="clear" title="Reassign"><i data-lucide="rotate-ccw"></i></button></div>`;
+  } else {
+    clockzone = `<div class="clockzone"><div class="cd">${fmt(rem)}</div>
+      <small>${overdue ? 'DEADLINE PASSED' : 'D-'+Math.ceil(rem/DAY)+' LEFT'}</small></div>`;
+    actions = `<div class="actions">
+      <button class="workbtn" data-act="stroke"><i data-lucide="hammer"></i>WORK <b class="n">${left}</b></button>
+      <button class="xbtn" data-act="clear" title="Cancel task"><i data-lucide="x"></i></button></div>`;
+  }
+
+  return `<article class="row ${done?'done':''} ${soon?'soon':''} ${overdue?'over':''}" data-id="${emp.id}">${base}${taskzone}${progzone}${clockzone}${actions}</article>`;
+}
+
+function emptyHTML(){
+  return `<div class="empty-state">
+    <div class="big">The roster is empty</div>
+    <p>Nobody on the crew yet.<br>Use ADD EMPLOYEE below to start building the team.</p>
+  </div>`;
+}
+
+const roster = $('#roster');
+function renderRow(id){
+  const el = roster.querySelector(`.row[data-id="${id}"]`);
+  const emp = CREW.find(c => c.id === id);
+  if (el && emp) el.outerHTML = rowHTML(emp);
+  icons();
+}
+function renderRoster(){
+  roster.innerHTML = CREW.length ? CREW.map(rowHTML).join('') : emptyHTML();
+  $('#crewCount').textContent = CREW.length;
+  $('#rosterCount').textContent = CREW.length
+    ? `${CREW.length} crew member${CREW.length>1?'s':''} on the sheet`
+    : '';
+  icons();
+}
+function renderAll(){ renderRoster(); }
+
+/* ============================== strip & stats ============================== */
+const strip = $('#strip');
+function renderStrip(){
+  strip.innerHTML = CREW.map(c => {
+    const st = state.get(c.id);
+    let cls = 'idle';
+    if (st.status === 'active') cls = (st.task.deadlineTs - Date.now() <= 0) ? 'over' : 'active';
+    else if (st.status === 'done') cls = 'done';
+    return `<button class="cell ${cls}" data-go="${c.id}" title="${esc(c.name)}"><span class="n">${pad(posOf(c))}</span></button>`;
+  }).join('');
+}
+function refreshStats(){
+  let act = 0, done = 0, over = 0;
+  for (const c of CREW){
+    const st = state.get(c.id);
+    if (st.status === 'done') done++;
+    else if (st.status === 'active'){ (st.task.deadlineTs - Date.now() <= 0) ? over++ : act++; }
+  }
+  $('#cAct').textContent = act; $('#cDone').textContent = done; $('#cOver').textContent = over;
+  renderStrip();
+}
+strip.addEventListener('click', e => {
+  const c = e.target.closest('[data-go]'); if (!c) return;
+  const row = roster.querySelector(`.row[data-id="${c.dataset.go}"]`);
+  if (!row) return;
+  row.scrollIntoView({behavior:'smooth', block:'center'});
+  row.classList.remove('flash'); void row.offsetWidth; row.classList.add('flash');
+});
+
+/* ============================== add / remove employees ============================== */
+const addBtn = $('#addBtn'), empForm = $('#empForm');
+addBtn.addEventListener('click', () => {
+  empForm.hidden = !empForm.hidden;
+  addBtn.hidden = !empForm.hidden;
+  if (!empForm.hidden) empForm.name.focus();
+});
+ $('#empCancel').addEventListener('click', () => {
+  empForm.hidden = true; addBtn.hidden = false; empForm.reset();
+});
+empForm.addEventListener('submit', e => {
+  e.preventDefault();
+  const name = empForm.name.value.trim();
+  if (!name) return;
+  const role = empForm.role.value.trim() || 'Crew';
+  const emp = {id: nextId++, name, role};
+  CREW.push(emp);
+  state.set(emp.id, {status:'idle'});
+  empForm.reset(); empForm.hidden = true; addBtn.hidden = false;
+  renderRoster(); refreshStats(); sound.tick();
+  pushToast('info', 'Crew member added', `${esc(name)} joined the sheet as ${esc(role)}. Assign a task whenever ready.`);
+});
+
+let armedDel = null, delT;
+roster.addEventListener('click', e => {
+  const del = e.target.closest('[data-act="delEmp"]');
+  if (del){
+    const id = +del.closest('.row').dataset.id;
+    const emp = CREW.find(c => c.id === id);
+    if (!emp) return;
+    const hasWork = state.get(id).status !== 'idle';
+    if (hasWork && armedDel !== id){
+      // two-step confirm when there's an active/finished task at stake
+      clearTimeout(delT); armedDel = id;
+      del.classList.add('arm'); del.innerHTML = '<i data-lucide="check"></i>'; icons();
+      delT = setTimeout(() => { armedDel = null; renderRow(id); }, 2600);
+      return;
+    }
+    clearTimeout(delT); armedDel = null;
+    CREW = CREW.filter(c => c.id !== id);
+    state.delete(id);
+    const rowEl = roster.querySelector(`.row[data-id="${id}"]`);
+    if (rowEl){
+      rowEl.classList.add('out');
+      setTimeout(() => { renderRoster(); refreshStats(); }, 280);
+    } else { renderRoster(); refreshStats(); }
+    sound.tick();
+    pushToast('info', 'Crew member removed', `${esc(emp.name)} was taken off the sheet. Numbering re-flowed automatically.`);
+    return;
+  }
+
+  const btn = e.target.closest('[data-act]'); if (!btn) return;
+  const id = +btn.closest('.row').dataset.id;
+  const act = btn.dataset.act;
+  if (act === 'assign'){ state.set(id, {status:'assigning', draftM:5}); renderRow(id); setTimeout(() => roster.querySelector(`.row[data-id="${id}"] .tinput`)?.focus(), 60); }
+  if (act === 'cancelAssign' || act === 'clear'){ state.set(id, {status:'idle'}); renderRow(id); refreshStats(); }
+  if (act === 'stroke') doStroke(id);
+});
+
+/* ============================== task actions ============================== */
+function startTask(id, title, days){
+  const t0 = Date.now();
+  state.set(id, {status:'active', task:{
+    title, minutes:days, startedTs:t0, deadlineTs:t0 + days*DAY,
+    strokes:0, alerted:false, overNotified:false, seed:(id*131 + t0%997)
+  }});
+  renderRow(id); refreshStats(); sound.tick();
+}
+
+function doStroke(id){
+  const st = state.get(id);
+  if (st.status !== 'active') return;
+  const t = st.task, total = t.minutes, emp = CREW.find(c => c.id === id);
+  t.strokes++; st.just = true; sound.tick();
+  if (t.strokes >= total){
+    t.finishedTs = Date.now();
+    t.late = t.finishedTs > t.deadlineTs;
+    st.status = 'done';
+    sound.done();
+    if (emp) pushToast(t.late ? 'over' : 'done', t.late ? 'Closed late' : 'Task complete',
+      `${esc(emp.name)} — “${esc(t.title)}” ${t.late
+        ? 'was closed '+fmt(t.finishedTs-t.deadlineTs)+' past the deadline.'
+        : 'finished with '+fmt(t.deadlineTs-t.finishedTs)+' to spare. All '+total+' strokes in.'}`);
+  }
+  renderRow(id);
+  if (st.status === 'active'){
+    const bar = roster.querySelector(`.row[data-id="${id}"] .bar i`);
+    if (bar){ const w = bar.style.width; bar.style.width = '0%'; void bar.offsetWidth; requestAnimationFrame(() => bar.style.width = w); }
+  }
+  refreshStats();
+}
+
+roster.addEventListener('submit', e => {
+  const f = e.target.closest('.aform'); if (!f) return;
+  e.preventDefault();
+  const id = +f.closest('.row').dataset.id;
+  const title = f.title.value.trim() || 'Untitled task';
+  startTask(id, title, state.get(id).draftM);
+});
+
+/* ============================== toasts & bell ============================== */
+const toasts = $('#toasts');
+function pushToast(kind, title, text){
+  const el = document.createElement('div');
+  el.className = 'toast ' + kind;
+  const ico = kind === 'done' ? 'check' : (kind === 'over' ? 'alarm-clock' : (kind === 'info' ? 'users' : 'bell-ring'));
+  el.innerHTML = `<i data-lucide="${ico}"></i><div><strong>${title}</strong><span>${text}</span></div>`;
+  toasts.appendChild(el); icons();
+  el.addEventListener('click', () => el.remove());
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 260); }, 6500);
+}
+
+const panel = $('#panel'), badge = $('#badge');
+function updateBell(){ badge.hidden = unread === 0; badge.textContent = unread; }
+function renderPanel(){
+  $('#alertList').innerHTML = alerts.length
+    ? alerts.map(a => `<div class="alert-item"><time>${hhmmss(a.ts)} · ${a.kind === 'over' ? 'OVERDUE' : 'DEADLINE ALERT'}</time>${esc(a.text)}</div>`).join('')
+    : `<div class="alert-item empty">No alerts yet. The bell rings when a task is one day (60s) from its deadline.</div>`;
+}
+ $('#bellBtn').addEventListener('click', e => {
+  e.stopPropagation();
+  panel.hidden = !panel.hidden;
+  if (!panel.hidden){ unread = 0; updateBell(); renderPanel(); }
+});
+document.addEventListener('click', e => {
+  if (!panel.hidden && !panel.contains(e.target) && !$('#bellBtn').contains(e.target)) panel.hidden = true;
+});
+
+ $('#sndBtn').addEventListener('click', () => {
+  const on = sound.toggle();
+  $('#sndBtn').innerHTML = `<i data-lucide="${on ? 'volume-2' : 'volume-x'}"></i>`; icons();
+});
+
+/* reset clears tasks only — the roster itself is managed by add/remove */
+const resetBtn = $('#resetBtn');
+let armed = false, armT;
+resetBtn.addEventListener('click', () => {
+  if (!armed){
+    armed = true; resetBtn.classList.add('arm'); resetBtn.textContent = 'SURE?';
+    armT = setTimeout(() => { armed = false; resetBtn.classList.remove('arm'); resetBtn.textContent = 'RESET'; }, 3000);
+    return;
+  }
+  clearTimeout(armT); armed = false;
+  resetBtn.classList.remove('arm'); resetBtn.textContent = 'RESET';
+  CREW.forEach(c => state.set(c.id, {status:'idle'}));
+  alerts.length = 0; unread = 0; updateBell(); renderPanel();
+  renderRoster(); refreshStats();
+  pushToast('done', 'Board reset', 'All tasks cleared. The roster itself is untouched.');
+});
+
+/* ============================== the clock ============================== */
+setInterval(() => {
+  $('#clock').textContent = hhmmss(Date.now());
+  for (const emp of CREW){
+    const st = state.get(emp.id);
+    if (!st || st.status !== 'active') continue;
+    const t = st.task, rem = t.deadlineTs - Date.now();
+    const rowEl = roster.querySelector(`.row[data-id="${emp.id}"]`);
+    if (!rowEl) continue;
+    const cd = rowEl.querySelector('.cd'), sm = rowEl.querySelector('.clockzone small');
+    if (cd) cd.textContent = fmt(rem);
+    if (rem > 0 && sm) sm.textContent = 'D-' + Math.ceil(rem / DAY) + ' LEFT';
+
+    if (!t.alerted && rem <= DAY && rem > 0){
+      t.alerted = true; unread++; sound.alert();
+      const msg = `${emp.name} — “${t.title}” hits its deadline in 1 day (60s).`;
+      alerts.unshift({ts:Date.now(), kind:'alert', text:msg});
+      pushToast('alert', 'Deadline alert', esc(msg));
+      updateBell(); refreshStats();
+      rowEl.classList.add('soon');
+    }
+    if (rem <= 0 && !t.overNotified){
+      t.overNotified = true; unread++; sound.alert();
+      rowEl.classList.remove('soon'); rowEl.classList.add('over');
+      const tn = rowEl.querySelector('.tname');
+      if (tn && !tn.querySelector('.tag')) tn.insertAdjacentHTML('beforeend', ' <b class="tag late">OVERDUE</b>');
+      if (sm) sm.textContent = 'DEADLINE PASSED';
+      const msg = `${emp.name} — “${t.title}” is OVERDUE.`;
+      alerts.unshift({ts:Date.now(), kind:'over', text:msg});
+      pushToast('over', 'Overdue', esc(msg));
+      updateBell(); refreshStats();
+    }
+  }
+}, 250);
+
+/* ============================== boot ============================== */
+ $('#date').textContent = new Date().toLocaleDateString('en-GB', {weekday:'short', day:'2-digit', month:'short', year:'numeric'}).toUpperCase();
+CREW.forEach(c => state.set(c.id, {status:'idle'}));
+renderRoster(); refreshStats(); updateBell(); renderPanel();
+
+// sample task, exactly your example: employee 01, a report, 5 days = 5 presses
+if (CREW.length){
+  startTask(CREW[0].id, 'Quarterly report — first draft', 5);
+  pushToast('info', 'Sample task is live',
+    `${esc(CREW[0].name)} is on “Quarterly report — first draft”: 5 days = 5 minutes = 5 presses of WORK (20% each). Hover any row to remove a member, or use ADD EMPLOYEE to grow the crew.`);
+}
+</script>
+</body>
+</html>
